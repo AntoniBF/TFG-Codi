@@ -1,0 +1,122 @@
+#Funció per generar els plots:
+plot_sentiment <- function(dades, lang1_col, lang2_col, lang3_col, lang4_col, plot_title) {
+  
+    #Creem variables a les quals assignem cada columna de llengua.
+  P <- dades$P
+  llengua1 <- dades[[lang1_col]]
+  llengua2 <- dades[[lang2_col]]
+  llengua3 <- dades[[lang3_col]]
+  llengua4 <- dades[[lang4_col]]
+
+  #Creem l'axis x a partir dels valors de la columna P, el nombre de paràgrafs. 
+  valors_axis_x <- as.numeric(unlist(P))
+
+  #Posem els límits de y a partir del rang de les dades. (de 0 a 1)
+  y_limits <- range(c(llengua1, llengua2, llengua3, llengua4), na.rm = TRUE)
+
+  #SCATTERPLOT
+  plot(P, llengua1,
+       main = plot_title,
+       xlab = "Paràgraf",
+       ylim = y_limits,
+       ylab = "Sentiment",
+       pch = 10 ,
+       col = "black",
+       xaxt = "n",
+       yaxt = "n")
+
+   #Podem afegir els punts per a cada llengua.
+  points(P, jitter(llengua2), #Fem jitter() per no solapar amb llengua1
+        pch = 10,
+         col = "blue") #Canviem els colors per a distingir les dades.
+  points(P, jitter(llengua3),
+         pch = 10,
+         col = "green")     
+  points(P, jitter(llengua4),
+         pch = 10,
+         col = "red")
+    
+
+  #Creem els axis per a les nostres dades:
+  #Li assignem els valors de la variable valors_axis_x
+  axis(1, at = 1:length(valors_axis_x), labels = valors_axis_x)
+  axis(2, at = c(0, 0.25, 0.5, 0.75, 1))
+
+  #Llegenda:
+  legend("topright", inset = c(-0.01, 0), legend = c(lang1_col, lang2_col, lang3_col, lang4_col),
+         col = c("black", "blue", "green", "red"), pch = 19)
+
+
+
+#Línies de punt a punt. Carrega la representació:
+  lines(P, llengua1, col = "black", lwd = 2)
+  lines(P, llengua2, col = "blue", lwd = 2)
+  lines(P, llengua3, col = "green", lwd = 2)
+  lines(P, llengua4, col = "red", lwd = 2)
+}
+
+#Moduls per fer "f-strings" però d'R (glue("")) 
+library(glue)
+
+#Canviar el nom entre cometes pel nom del conte.
+conte <-"Ventafocs"
+dades_conte <- read.csv(glue("{conte}_dades.csv"))
+
+#################################################################
+
+#Funció per generar els plots amb línies de regressió:
+plot_sentiment_regressio <- function(dades, lang1_col, lang2_col, lang3_col, lang4_col, plot_title) {
+  
+    #Creem variables a les quals assignem cada columna de llengua.
+  P <- dades$P
+  llengua1 <- dades[[lang1_col]]
+  llengua2 <- dades[[lang2_col]]
+  llengua3 <- dades[[lang3_col]]
+  llengua4 <- dades[[lang4_col]]
+
+  # Prepare x-axis values from the P column
+  valors_axis_x <- as.numeric(unlist(P))
+
+  #Posem els límits de y a partir del rang de les dades. (de 0 a 1)
+  y_limits <- range(c(llengua1, llengua2, llengua3, llengua4), na.rm = TRUE)
+
+ # SCATTERPLOT
+  plot(P, llengua1,
+       main = plot_title,
+       xlab = "Paràgraf",
+       ylim = y_limits,
+       ylab = "Sentiment",
+       pch = NA , #NA per a no incloure els punts, n'hi ha massa.
+       col = "black",
+       xaxt = "n",
+       yaxt = "n")
+    
+
+  #Creem els axis per a les nostres dades:
+  #Li assignem els valors de la variable valors_axis_x
+  axis(1, at = 1:length(valors_axis_x), labels = valors_axis_x)
+  axis(2, at = c(0, 0.25, 0.5, 0.75, 1))
+
+  #Llegenda:
+  legend("topright", inset = c(-0.01, 0), legend = c(lang1_col, lang2_col, lang3_col, lang4_col),
+         col = c("black", "blue", "green", "red"), pch = 19)
+
+
+
+#Línies lowess, per representar la tendència.
+  lines(lowess(P, llengua1), col = "black", lwd = 2)
+  lines(lowess(P, llengua2), col = "blue", lwd = 2)
+  lines(lowess(P, llengua3), col = "green", lwd = 2)
+  lines(lowess(P, llengua4), col = "red", lwd = 2)
+}
+
+#Moduls per fer "f-strings" però d'R (glue("")) 
+library(glue)
+
+#Canviar el nom entre cometes pel nom del conte.
+conte <-"Ventafocs"
+dades_conte <- read.csv(glue("{conte}_dades.csv"))
+
+#Funcins:
+plot_sentiment_regressio(dades_conte, "DE", "FR", "ES", "EN", glue("Valors de sentiment per llengua: {conte}"))
+plot_sentiment(dades_conte, "DE", "FR", "ES", "EN", glue("Valors de sentiment per llengua: {conte}"))
