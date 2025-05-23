@@ -1,0 +1,56 @@
+import requests
+from bs4 import BeautifulSoup
+import pathlib
+from pathlib import Path
+import re
+
+#Introduim els URLs dels contes en cada llengua
+urls = [
+    "https://www.grimmstories.com/en/grimm_fairy-tales/aschenputtel", 
+    "https://www.grimmstories.com/es/grimm_cuentos/la_cenicienta", 
+    "https://www.grimmstories.com/fr/grimm_contes/cendrillon",
+    "https://www.grimmstories.com/de/grimm_maerchen/aschenputtel"
+]
+
+#Input per a crear el nom de la carpeta d'emmagatzematgesegons el nom del conte
+input_nom = input("Introdueix el nom del conte:")
+carpeta_articles = Path(f"/Users/tonibf/Desktop/patata/{input_nom}")
+carpeta_articles.mkdir(parents=True, exist_ok=True)
+
+
+def contes(contes, carpeta_articles):
+
+    for url in urls:
+  
+        llengua = re.findall(r"/\w\w\w?/", str(url))
+        llengua2 = "".join(re.findall(r"\w\w\w?", str(llengua)))
+        
+        parapgraph_folder = carpeta_articles / f"{str(llengua2)}_paràgrafs"
+        parapgraph_folder.mkdir(parents=True, exist_ok=True)
+
+        #Perquè la web no ens consideri bots (o disminuir la probabilitat que ho faci):
+        headers = {
+    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0"
+}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status() 
+        
+        #Creació d'un document amb el conte sencer
+        file_path = carpeta_articles / f"{str(llengua2)}_Conte_Sencer.txt"
+        with file_path.open ("w", encoding="utf-8") as x:
+
+                
+                soup = BeautifulSoup(response.content, 'html.parser')
+
+                
+                text = soup.find_all('div', {"class": "s"})
+
+                for p in text:
+                    x.write(p.get_text() + '\n\n')
+
+                
+        for i, div in enumerate(text, start=1):
+            output_file = parapgraph_folder / f"{llengua2}_Prgrf_{i}.txt"
+            with output_file.open("w", encoding="utf-8") as f:
+                f.write(div.get_text(strip=True)) 
+contes(urls, carpeta_articles)
