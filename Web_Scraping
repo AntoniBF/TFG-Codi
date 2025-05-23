@@ -1,3 +1,16 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Keras sentiment analysis with Elmo Embeddings\n",
+    "\n",
+    "One of the recent trends in Natural Language Processing is transfer learning. Transfer learning allows NLP models to learn more from fewer examples. In this notebook, we experiment with so-called [ELMo Embeddings](https://allennlp.org/elmo), a new approach to word embeddings that relies on a large unlabelled text corpus to understand word meaning in context. ELMo Embeddings are available from [Tensorflow Hub](https://alpha.tfhub.dev/google/elmo/2)."
+   ]
+  },
+
+
 import requests
 from bs4 import BeautifulSoup
 import pathlib
