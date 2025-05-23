@@ -21,10 +21,12 @@ carpeta_articles.mkdir(parents=True, exist_ok=True)
 def contes(contes, carpeta_articles):
 
     for url in urls:
-  
-        llengua = re.findall(r"/\w\w\w?/", str(url))
-        llengua2 = "".join(re.findall(r"\w\w\w?", str(llengua)))
+        #Extracció de les llengües a partir dels links. /en/, /fr/...
+        llengua = re.findall(r"/\w\w/", str(url))
+        #Variable per a guardar la llengua del conte i utilitzar-la en la f-string
+        llengua2 = "".join(re.findall(r"\w\w", str(llengua)))
         
+        #Creació de la carpeta que conté els paràgrafs
         parapgraph_folder = carpeta_articles / f"{str(llengua2)}_paràgrafs"
         parapgraph_folder.mkdir(parents=True, exist_ok=True)
 
