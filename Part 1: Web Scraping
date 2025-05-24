@@ -1,11 +1,11 @@
-
+#Moduls necessaris per a crear la funció de web scraping.
 import requests
 from bs4 import BeautifulSoup
 import pathlib
 from pathlib import Path
 import re
 
-#Introduim els URLs dels contes en cada llengua
+#Llista amb els URLs dels contes que volem analitzar(Per exemple, La Ventafocs).
 urls = [
     "https://www.grimmstories.com/en/grimm_fairy-tales/aschenputtel", 
     "https://www.grimmstories.com/es/grimm_cuentos/la_cenicienta", 
@@ -13,23 +13,25 @@ urls = [
     "https://www.grimmstories.com/de/grimm_maerchen/aschenputtel"
 ]
 
-#Input per a crear el nom de la carpeta d'emmagatzematgesegons el nom del conte
+#Input per a crear el nom de la carpeta d'emmagatzematge segons el nom del conte
 input_nom = input("Introdueix el nom del conte:")
+
+#Carpeta on es guardaran els contes i paràgrafs.  A modificar segons els directoris de treball de l'usuari.
 carpeta_articles = Path(f"/Users/tonibf/Desktop/patata/{input_nom}")
 carpeta_articles.mkdir(parents=True, exist_ok=True)
 
-
-def contes(contes, carpeta_articles):
+#Comencem a definir la funció
+def contes(urls, carpeta_articles):
 
     for url in urls:
-        #Extracció de les llengües a partir dels links. /en/, /fr/...
+        #Extracció de les llengües a partir del format dels links: /en/, /fr/...
         llengua = re.findall(r"/\w\w/", str(url))
         #Variable per a guardar la llengua del conte i utilitzar-la en la f-string
         llengua2 = "".join(re.findall(r"\w\w", str(llengua)))
         
         #Creació de la carpeta que conté els paràgrafs
-        parapgraph_folder = carpeta_articles / f"{str(llengua2)}_paràgrafs"
-        parapgraph_folder.mkdir(parents=True, exist_ok=True)
+        carpeta_paragrafs = carpeta_articles / f"{str(llengua2)}_paràgrafs"
+        carpeta_paragrafs.mkdir(parents=True, exist_ok=True)
 
         #Perquè la web no ens consideri bots (o disminuir la probabilitat que ho faci):
         headers = {
@@ -40,20 +42,28 @@ def contes(contes, carpeta_articles):
         
         #Creació d'un document amb el conte sencer
         file_path = carpeta_articles / f"{str(llengua2)}_Conte_Sencer.txt"
-        with file_path.open ("w", encoding="utf-8") as x:
+        with file_path.open ("w", encoding="utf-8") as conte:
 
                 
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-                
+                #<div = class "s"> és el header que marca el contingut i paràgrafs dels contes al codi HTML de grimmmstories.com.
+                #Per tant, text és tot el contingut dins aquest tipus de header. 
                 text = soup.find_all('div', {"class": "s"})
-
-                for p in text:
-                    x.write(p.get_text() + '\n\n')
-
                 
-        for i, div in enumerate(text, start=1):
-            output_file = parapgraph_folder / f"{llengua2}_Prgrf_{i}.txt"
-            with output_file.open("w", encoding="utf-8") as f:
-                f.write(div.get_text(strip=True)) 
+                #Per cada header, escrivim el contingut al document del conte sencer i introduim dos salts de línia per separar els paràgrafs.
+                for p in text:
+                    #Amb .get_text ignorem totes les etiquetes HTML.
+                    conte.write(p.get_text() + '\n\n')
+
+        #Enumerate() itera "text": [contingut, índex]
+        #l'index, i, l'utilitzem per enumerar els paràgrafs al nom del document
+        #contingut és el text, el qual l'escrivim al document corresponent.
+        for i, contingut in enumerate(text, start=1):
+            #i dins l'f-string permet enumrar els documents.
+            output_file = carpeta_paragrafs / f"{llengua2}_Prgrf_{i}.txt"
+            with output_file.open("w", encoding="utf-8") as paragraf:
+                
+                paragraf.write(contingut.get_text(strip=True)) 
+#Cridem la funció. La primera varaible una llista d'URLS i la segona el directori on es guardaran els texts.
 contes(urls, carpeta_articles)
