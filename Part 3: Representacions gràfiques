@@ -117,6 +117,6 @@ library(glue)
 conte <-"Ventafocs"
 dades_conte <- read.csv(glue("{conte}_dades.csv"))
 
-#Funcins:
+#Funcions:
 plot_sentiment_regressio(dades_conte, "DE", "FR", "ES", "EN", glue("Valors de sentiment per llengua: {conte}"))
 plot_sentiment(dades_conte, "DE", "FR", "ES", "EN", glue("Valors de sentiment per llengua: {conte}"))
