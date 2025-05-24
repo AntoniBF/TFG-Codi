@@ -6,6 +6,10 @@ import re
 import nltk
 import csv
 
+#Dues línies de codi per a importar els continguts de Google Drive
+#from google.colab import drive
+#drive.mount('/content/drive')
+
 #Objecte path al drive. 
 carpeta_articlesX = Path("/content/drive/MyDrive/")
 
@@ -13,12 +17,22 @@ carpeta_articlesX = Path("/content/drive/MyDrive/")
 carpeta_a_analitzar = input("Nom de carpeta a analitzar:")
 carpeta_anàlisi = carpeta_articlesX / f"{carpeta_a_analitzar}"
 
-#Si les dades s¡han extret amb el codi previ de web scraping, no cal modificar-ho.
+#Si les dades s'han extret amb el codi previ de web scraping, no cal modificar-ho.
 FR = carpeta_anàlisi / "fr_paràgrafs"
 DE = carpeta_anàlisi/ "de_paràgrafs"
 EN = carpeta_anàlisi / "en_paràgrafs"
 ES = carpeta_anàlisi/ "es_paràgrafs"
 
+#Funció per a arrodonir resultats a la nsotra escala de treball en cas que s'hagin de calcular mitja d'alguns paràgrafs
+def arrodoniment(x):
+  #Valors de l'escala
+  numeros_possibles = [0, 0.25, 0.5, 0.75]
+  #Per exemple, abs()
+  closest_value = min(numeros_possibles, key=lambda option: abs(option - x))
+
+  return closest_value
+
+#La funció analyze_documents_in_folder per a calcular els resultats amb el model d'anàlisi i guardar-los en una variable.
 def analyze_documents_in_folder(folder_path):
 
   #Línia de codi de la pipeline del model d'anàlisi de sentiments
@@ -30,12 +44,12 @@ def analyze_documents_in_folder(folder_path):
       filepath = os.path.join(folder_path, filename)
       with open(filepath, "r") as f:
         text = f.read()
-          
-    #Separar el text raw si és més llarg de 350 paraules:
 
+    #Contador de paraules
     tokenitzador=nltk.tokenize.RegexpTokenizer(r"[ldsmLDSM]\'|\w+|[^\w\s]+")
     tokens=tokenitzador.tokenize(text)
 
+    #Separar el text si el contador de paraules és més gran que 350:
     if len(tokens) > 350:
                 #Partim la quantitat de tokens en dues meitats:
                 split_index = len(tokens) // 2
@@ -51,21 +65,22 @@ def analyze_documents_in_folder(folder_path):
                 #Llista en la qual posarem els dos resultats de cada meitat per a fer la mitja
                 pre_Average = []
 
-                d_map_labels_to_scores = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
+
+                etiqueta_a_numero = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
                 
                 #Els numerical_score son les estrelles transformades en valors segons el diccionari.
-                numerical_score = d_map_labels_to_scores.get(result1)
+                numerical_score = etiqueta_a_numero.get(result1)
                 #Pre_Average és el valor de la primera meitat. 
                 pre_Average.append(numerical_score)
 
 
-                numerical_score2 = d_map_labels_to_scores.get(result2)
+                numerical_score2 = etiqueta_a_numero.get(result2)
                 pre_Average.append(numerical_score2)
-
+                #Mitjana entre els dos "score":
                 average_sentiment = sum(pre_Average) / len(pre_Average)
 
-                #Mitjana entre els dos "score":
-                final_sentiment = closest_value(average_sentiment)
+                #Arrodoniment de la mitjana al valor més proper de la nostra escala (etiqueta_a_numero)
+                final_sentiment = arrodoniment(average_sentiment)
 
                 #Afegim el resultat a "results" amb la mateixa estructura de diccionari.                
                 results.append({"filename": filename, "sentiment": [{"label": final_sentiment}]})
@@ -81,7 +96,7 @@ def analyze_documents_in_folder(folder_path):
 #Funció per imprimir els resultats (hi ha molts items)
 #i poder visualitzar els resultats durant l'execució. 
 def printing(folder_path):
-  d_map_labels_to_scores = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
+  etiqueta_a_numero = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
   results = analyze_documents_in_folder(folder_path)
   results.sort(key=lambda item: int(re.search(r"\d", item['filename']).group()))
 
@@ -89,7 +104,7 @@ def printing(folder_path):
   for item in results:
     name = item["filename"]
     value = item["sentiment"][0]["label"]#["score"]
-    numerical_score = d_map_labels_to_scores.get(value)
+    numerical_score = etiqueta_a_numero.get(value)
     print(f"{name},{numerical_score}")
 
     #Per assegurar-se de l'estructura de l'item. Pot variar segons el model d'AS
@@ -101,8 +116,8 @@ def printing(folder_path):
 #printing(ES)
 
 
-def save_results_to_csv(results, output_filename):
-    d_map_labels_to_scores = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
+def resultats_a_csv(results, output_filename):
+    etiqueta_a_numero = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
 
     #Al diccionari {} podem guardar els resultats per llengua i número:
     data = {}
@@ -114,7 +129,7 @@ def save_results_to_csv(results, output_filename):
 
         if language not in data:
             data[language] = {}  #Fem un diccionari per llengua
-        data[language][paragraph_number] = d_map_labels_to_scores.get(item["sentiment"][0]["label"])  # Store the score
+        data[language][paragraph_number] = etiqueta_a_numero.get(item["sentiment"][0]["label"])  # Store the score
 
     
     #Escrivim les dades en un .csv per a processar les dades a posteriori.
@@ -145,19 +160,22 @@ def transposar (input_csv, transposat_csv):
         writer = csv.writer(outfile)
         writer.writerows(transposed_data)
 
-
+#Definim una funció per analitzar tots els documents i guardar-los en .csv alhora
 def anàlisi_simultani(folder_paths, output_filename):
     all_results = []
     #folder_paths és una llista de tots els fitxers que volem analitzar; loop
     for folder_path in folder_paths:
         results = analyze_documents_in_folder(folder_path)
         all_results.extend(results)
-    save_results_to_csv(all_results, output_filename)
+
+    resultats_a_csv(all_results, output_filename)
     transposar(output_filename, output_filename.replace(".csv", "_dades.csv"))
 
-#Hem de fer una llista de paths als texts d'anàlisi
+#Crida de la funció:
+
+#Primer hem de fer una llista de paths els quals corresponguin als texts d'anàlisi. És a dir, les subcarpetes de la part 1.
 folder_paths = [DE, FR, EN, ES]
 
 #Posar el nom desitjat del fitxer output.
-#Obtindrem 2 .csv: un en horitzontal i un altre en vertical. 
+#Obtindrem 2 .csv a sample_data: un en horitzontal i un altre en vertical. 
 anàlisi_simultani(folder_paths, f"{carpeta_a_analitzar}.csv")
