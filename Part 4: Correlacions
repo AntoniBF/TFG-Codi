@@ -1,0 +1,23 @@
+#Codi per calcular les correlacions:
+
+library(glue)
+
+#Creem els paths
+#Variable a modificar segons el nom de les dades a analitzar:
+conte = "Ventafocs"
+
+dades <- read.csv(glue("{conte}_dades.csv"))
+
+#Incloem les columnes que ens interessen. La columna P no la volem.
+#Posem les columnes per ordre del .csv. 
+columnes <- dades[, c("DE", "FR", "EN", "ES")]
+
+#Creem una matriu perquè calculi el coeficient de Spearman per a totes les parelles:
+matrix_correlacio <- cor(columnes, method = "spearman")
+
+#Visulització de la matriu
+print(matrix_correlacio)
+
+#Codi per salvar els resultats en un .csv:
+output_matrix <- glue("{conte}_correlacions.csv")
+write.csv(matrix_correlacio, file = output_matrix, row.names = TRUE)
