@@ -17,7 +17,7 @@ carpeta_articlesX = Path("/content/drive/MyDrive/")
 carpeta_a_analitzar = input("Nom de carpeta a analitzar:")
 carpeta_anàlisi = carpeta_articlesX / f"{carpeta_a_analitzar}"
 
-#Si les dades s'han extret amb el codi previ de web scraping, no cal modificar-ho.
+#Si les dades s'han extret amb el codi previ "Part 1: Web Scraping", no cal modificar-ho.
 FR = carpeta_anàlisi / "fr_paràgrafs"
 DE = carpeta_anàlisi/ "de_paràgrafs"
 EN = carpeta_anàlisi / "en_paràgrafs"
@@ -26,8 +26,8 @@ ES = carpeta_anàlisi/ "es_paràgrafs"
 #Funció per a arrodonir resultats a la nsotra escala de treball en cas que s'hagin de calcular mitja d'alguns paràgrafs
 def arrodoniment(x):
   #Valors de l'escala
-  numeros_possibles = [0, 0.25, 0.5, 0.75]
-  #Per exemple, abs()
+  numeros_possibles = [0, 0.25, 0.5, 0.75, 1]
+  #Per exemple, abs(0-1)
   closest_value = min(numeros_possibles, key=lambda option: abs(option - x))
 
   return closest_value
@@ -65,7 +65,7 @@ def analyze_documents_in_folder(folder_path):
                 #Llista en la qual posarem els dos resultats de cada meitat per a fer la mitja
                 pre_Average = []
 
-
+                #Etiquetes comunes dels models d'AS. nlptown empra el patró "n stars".
                 etiqueta_a_numero = {"1 star": 0, "2 stars": 0.25, "3 stars": 0.5, "4 stars": 0.75, "5 stars": 1, "negative": 0, "neutral": 0.5, "positive": 1, "Very Negative": 0, "Negative": 0.25, "Neutral": 0.5, "Positive": 0.75, "Very Positive": 1, 0: 0, 0.25: 0.25, 0.5: 0.5, 1: 1}
                 
                 #Els numerical_score son les estrelles transformades en valors segons el diccionari.
